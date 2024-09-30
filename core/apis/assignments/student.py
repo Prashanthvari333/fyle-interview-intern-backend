@@ -23,8 +23,11 @@ def list_assignments(p):
 def upsert_assignment(p, incoming_payload):
     """Create or Edit an assignment"""
     assignment = AssignmentSchema().load(incoming_payload)
-    assignment.student_id = p.student_id
 
+    if not incoming_payload['content']:
+        return APIResponse.respond(data={'error': 'FyleError', 'message': 'Assignment not found.'}, status_code=400)
+    
+    assignment.student_id = p.student_id
     upserted_assignment = Assignment.upsert(assignment)
     db.session.commit()
     upserted_assignment_dump = AssignmentSchema().dump(upserted_assignment)
@@ -37,6 +40,24 @@ def upsert_assignment(p, incoming_payload):
 def submit_assignment(p, incoming_payload):
     """Submit an assignment"""
     submit_assignment_payload = AssignmentSubmitSchema().load(incoming_payload)
+    
+    # Retrieve the assignment by ID
+    assignment = Assignment.get_by_id(submit_assignment_payload.id)
+    
+    # Check if the assignment exists
+    if not assignment:
+        return APIResponse.respond(
+            data={'error': 'FyleError', 'message': 'Assignment not found.'},
+            status_code=400
+        )
+    
+    
+    if Assignment.get_by_id(submit_assignment_payload.id).state in ['SUBMITTED','GRADED']:
+        print(Assignment.get_by_id(submit_assignment_payload.id).state,submit_assignment_payload.id)
+        return APIResponse.respond(
+            data={'error':'FyleError', "message":'only a draft assignment can be submitted'},
+            status_code=400
+        )
 
     submitted_assignment = Assignment.submit(
         _id=submit_assignment_payload.id,

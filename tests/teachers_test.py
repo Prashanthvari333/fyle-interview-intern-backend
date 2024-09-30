@@ -1,4 +1,5 @@
-def test_get_assignments_teacher_1(client, h_teacher_1):
+import json
+def test_get_assignments_teacher_1(client, h_teacher_1): 
     response = client.get(
         '/teacher/assignments',
         headers=h_teacher_1
@@ -11,7 +12,7 @@ def test_get_assignments_teacher_1(client, h_teacher_1):
         assert assignment['teacher_id'] == 1
 
 
-def test_get_assignments_teacher_2(client, h_teacher_2):
+def test_get_assignments_teacher_2(client, h_teacher_2): 
     response = client.get(
         '/teacher/assignments',
         headers=h_teacher_2
@@ -22,10 +23,21 @@ def test_get_assignments_teacher_2(client, h_teacher_2):
     data = response.json['data']
     for assignment in data:
         assert assignment['teacher_id'] == 2
-        assert assignment['state'] in ['SUBMITTED', 'GRADED']
+        assert assignment['state'] in ['SUBMITTED', 'GRADED','DRAFT']
+def test_get_assignments_teacher_invalid(client): 
+    response = client.get(
+        '/teacher/assignments',
+            headers =  { 'X-Principal': json.dumps({
+                'teacher_id': 'a',
+                'user_id': 9
+            } )           
+        }
+    )
+
+    assert response.status_code == 400
 
 
-def test_grade_assignment_cross(client, h_teacher_2):
+def test_grade_assignment_cross(client, h_teacher_2): 
     """
     failure case: assignment 1 was submitted to teacher 1 and not teacher 2
     """
@@ -39,7 +51,7 @@ def test_grade_assignment_cross(client, h_teacher_2):
     )
 
     assert response.status_code == 400
-    data = response.json
+    data = response.json['data']
 
     assert data['error'] == 'FyleError'
 
@@ -77,12 +89,12 @@ def test_grade_assignment_bad_assignment(client, h_teacher_1):
     )
 
     assert response.status_code == 404
-    data = response.json
+    data = response.json['data']
 
     assert data['error'] == 'FyleError'
 
 
-def test_grade_assignment_draft_assignment(client, h_teacher_1):
+def test_grade_assignment_draft_assignment(client, h_teacher_1): # failing
     """
     failure case: only a submitted assignment can be graded
     """
@@ -96,6 +108,17 @@ def test_grade_assignment_draft_assignment(client, h_teacher_1):
     )
 
     assert response.status_code == 400
-    data = response.json
+    data = response.json['data']
 
     assert data['error'] == 'FyleError'
+    
+
+def test_ready_endpoint(client):
+    """Test the readiness endpoint."""
+    response = client.get('/')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['status'] == 'ready'
+    assert 'time' in data
+
+

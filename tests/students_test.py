@@ -1,3 +1,5 @@
+import json
+
 def test_get_assignments_student_1(client, h_student_1):
     response = client.get(
         '/student/assignments',
@@ -55,6 +57,23 @@ def test_post_assignment_student_1(client, h_student_1):
     assert data['content'] == content
     assert data['state'] == 'DRAFT'
     assert data['teacher_id'] is None
+    
+def test_edit_assignment_student_1(client, h_student_1):
+    content = 'ABCD TESTPOST XYZ'
+
+    response = client.post(
+        '/student/assignments',
+        headers=h_student_1,
+        json={
+            'content': content
+        })
+
+    assert response.status_code == 200
+
+    data = response.json['data']
+    assert data['content'] == content
+    assert data['state'] == 'DRAFT'
+    assert data['teacher_id'] is None
 
 
 def test_submit_assignment_student_1(client, h_student_1):
@@ -82,7 +101,9 @@ def test_assignment_resubmit_error(client, h_student_1):
             'id': 2,
             'teacher_id': 2
         })
-    error_response = response.json
+    
+    # Decode and parse the response data
+    error_response = response.json['data']
     assert response.status_code == 400
     assert error_response['error'] == 'FyleError'
     assert error_response["message"] == 'only a draft assignment can be submitted'

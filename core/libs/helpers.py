@@ -9,6 +9,9 @@ class GeneralObject:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+            
+    def __getitem__(self, key):
+        return self.__dict__[key]
 
 
 def get_utc_now():
