@@ -69,3 +69,14 @@ def test_list_all_teachers(client, h_principal):
         headers=h_principal
     )
     assert response.status_code == 200
+    
+    
+def test_invalid_url(client, h_principal):
+    try:
+        response = client.get(
+            '/principals/teachers',
+            headers=h_principal
+        )
+        return False
+    except:
+        return True

@@ -36,11 +36,12 @@ def grade_assignment(p, incoming_payload):
         return APIResponse.respond(data={'error': 'FyleError'}, status_code=404)
     if assignment.state in ['DRAFT'] or assignment.teacher_id != p.teacher_id:
         return APIResponse.respond(data={'error': 'FyleError'}, status_code=400)
-    graded_assignment = Assignment.mark_grade(
-        _id=grade_assignment_payload.id,
-        grade=grade_assignment_payload.grade,
-        auth_principal=p
-    )
-    db.session.commit()
-    graded_assignment_dump = AssignmentSchema().dump(graded_assignment)
-    return APIResponse.respond(data=graded_assignment_dump)
+    else:
+        graded_assignment = Assignment.mark_grade(
+            _id=grade_assignment_payload.id,
+            grade=grade_assignment_payload.grade,
+            auth_principal=p
+        )
+        db.session.commit()
+        graded_assignment_dump = AssignmentSchema().dump(graded_assignment)
+        return APIResponse.respond(data=graded_assignment_dump)
